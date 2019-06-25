@@ -17,7 +17,7 @@ def sigmoid(x):
     """
 
     ### YOUR CODE HERE
-    s =  1 / (1 + math.exp(-x))
+    s =  1 / (1.0 + np.exp(-x))
     ### END YOUR CODE
 
     return s
@@ -57,14 +57,18 @@ def naiveSoftmaxLossAndGradient(
     ### Please use the provided softmax function (imported earlier in this file)
     ### This numerically stable implementation helps you avoid issues pertaining
     ### to integer overflow.
-    y_hat  = softmax(np.dot(outsideVectors.T, centerWordVec))   ### Equation 1 a2.pdf part 1
-    loss = - np.log(y_hat[outsideWordIdx])                      ### Equation 3 a2.pdf part 1
 
-    delta = y_hat.copy()
-    delta[outsideWordIdx] -= 1 # y_hat - y, Total Error
+    ### Forward Pass
+    y_hat  = softmax(np.dot(outsideVectors, centerWordVec))   ### Equation 1 a2.pdf part 1
+    loss = - np.log(y_hat[outsideWordIdx])                    ### Equation 3 a2.pdf part 1
 
-    gradCenterVec = np.dot(delta, outsideVectors)  ### Solution to 1(b) a2.pdf part 1
-    gradOutsideVecs = np.dot(delta[:, np.newaxis], centerWordVec[np.newaxis, :]) ### Solution to 1(c) a2.pdf part 1
+    ### Create y
+    y = np.zeros_like(y_hat)
+    y[outsideWordIdx] = 1
+
+    ### Compute Gradient
+    gradCenterVec = np.dot(outsideVectors.T, (y_hat-y))  ### Solution to 1(b) a2.pdf part 1
+    gradOutsideVecs = np.outer((y_hat - y), centerWordVec) ### Solution to 1(c) a2.pdf part 1
 
     ### END YOUR CODE
     return loss, gradCenterVec, gradOutsideVecs
@@ -109,9 +113,35 @@ def negSamplingLossAndGradient(
     indices = [outsideWordIdx] + negSampleWordIndices
 
     ### YOUR CODE HERE
-
     ### Please use your implementation of sigmoid in here.
 
+    ### Init gradients and loss for k iterations
+    gradCenterVec = np.zeros_like(centerWordVec)
+    gradOutsideVecs = np.zeros_like(outsideVectors)
+    loss = 0.0
+
+    ### Compute the loss and grads for u_o the outside word vector
+    ### First part of equation 5 part 1 letter e
+    u_o = outsideVectors[outsideWordIdx]
+    sigma_o = sigmoid(np.dot(u_o.T, centerWordVec))
+    loss = -np.log(sigma_o)
+
+    ### Update center gradient for first part of solution part 1 letter e
+    ### Update outside gradient for solution of part 1 letter e with respect to outside vector
+    gradCenterVec += -u_o.T * (1.0 - sigma_o)
+    gradOutsideVecs[outsideWordIdx] += -centerWordVec * (1.0 - sigma_o)
+
+    ### Loop through all k values and update loss, gradient centerWords, gradient outsideWords
+    for k in range(K):
+        sample = indices[k + 1] ### index 0 == outside word and k!=0
+        u_k = outsideVectors[sample]
+        sigma_k = sigmoid(np.dot(-u_k, centerWordVec))
+        loss -= np.log(sigma_k)
+
+        ###Second part of solution part 1 letter e
+        gradCenterVec += u_k * (1 - sigma_k)
+        ### Update outside gradient for solution of part 1 letter e with respect to negative samples
+        gradOutsideVecs[sample] += centerWordVec * (1.0 - sigma_k)
 
     ### END YOUR CODE
 
@@ -154,6 +184,22 @@ def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
     gradOutsideVectors = np.zeros(outsideVectors.shape)
 
     ### YOUR CODE HERE
+
+    ### get index of center word and its vector
+    index_c = word2Ind[currentCenterWord]
+    v_c = centerWordVectors[index_c]
+
+    ### loop through all outside words in window
+    for outside_word in outsideWords:
+        index_o = word2Ind[outside_word]  ### get index of outside word
+
+        ### calculate loss and gradients
+        loss_o, grad_c, grad_o = word2vecLossAndGradient(v_c, index_o, outsideVectors, dataset)
+
+        ### update loss and gradients
+        loss += loss_o
+        gradCenterVecs[index_c] += grad_c
+        gradOutsideVectors += grad_o
 
     ### END YOUR CODE
 
