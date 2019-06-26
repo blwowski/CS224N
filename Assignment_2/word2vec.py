@@ -123,12 +123,12 @@ def negSamplingLossAndGradient(
     ### Compute the loss and grads for u_o the outside word vector
     ### First part of equation 5 part 1 letter e
     u_o = outsideVectors[outsideWordIdx]
-    sigma_o = sigmoid(np.dot(u_o.T, centerWordVec))
+    sigma_o = sigmoid(np.dot(u_o, centerWordVec))
     loss = -np.log(sigma_o)
 
     ### Update center gradient for first part of solution part 1 letter e
     ### Update outside gradient for solution of part 1 letter e with respect to outside vector
-    gradCenterVec += -u_o.T * (1.0 - sigma_o)
+    gradCenterVec += -u_o * (1.0 - sigma_o)
     gradOutsideVecs[outsideWordIdx] += -centerWordVec * (1.0 - sigma_o)
 
     ### Loop through all k values and update loss, gradient centerWords, gradient outsideWords

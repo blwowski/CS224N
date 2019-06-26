@@ -87,7 +87,6 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
         loss = None
         ### YOUR CODE HERE
 
-
         loss, gradient = f(x) ### Caculate loss and gradient using the function f from parameters
         x -= gradient * step ### Update x by gradient and learning rate (step)
 
