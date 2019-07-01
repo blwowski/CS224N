@@ -80,20 +80,26 @@ def minibatch_parse(sentences, model, batch_size):
     dependencies = []
 
     ### YOUR CODE HERE (~8-10 Lines)
-    ### TODO:
-    ###     Implement the minibatch parse algorithm as described in the pdf handout
-    ###
-    ###     Note: A shallow copy (as denoted in the PDF) can be made with the "=" sign in python, e.g.
-    ###                 unfinished_parses = partial_parses[:].
-    ###             Here `unfinished_parses` is a shallow copy of `partial_parses`.
-    ###             In Python, a shallow copied list like `unfinished_parses` does not contain new instances
-    ###             of the object stored in `partial_parses`. Rather both lists refer to the same objects.
-    ###             In our case, `partial_parses` contains a list of partial parses. `unfinished_parses`
-    ###             contains references to the same objects. Thus, you should NOT use the `del` operator
-    ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
-    ###             is being accessed by `partial_parses` and may cause your code to crash.
+    ### Implement the minibatch parse algorithm as described in the pdf handout
+    ### Step 1: Initialize partial_parses as a list of PartialParses
+    partial_parses = [PartialParse(sentence) for sentence in sentences]
+    ### Step 2: Initialize unfinished parses as a shallow copy of partial parses
+    unfinished_parses = partial_parses[:]
+    ### Step 3: Loop till unfinished_parses is empty
+    while len(unfinished_parses):
+        ### Get batch_size parses from unfinished_parses as a minibatch
+        minibatch = unfinished_parses[:batch_size]
+        ### Use model to predict the next transition for each in the minibatch
+        minibatch_predicted_transitions = model.predict(minibatch)
+        ### Perform a parse step on each minibatch with its predicted transition
+        for partial_parse, transition in zip(minibatch, minibatch_predicted_transitions):
+            partial_parse.parse([transition])
+            ### Remove the completed parses from unfinished_parses d (empty buffer and stack of size 1)
+            if not partial_parse.buffer and len(partial_parse.stack) == 1:
+                unfinished_parses.remove(partial_parse)
 
-
+    ### Return: The dependencies for each (now completed) parse in partial parses.
+    dependencies = [partial_parse.dependencies for partial_parse in partial_parses]
     ### END YOUR CODE
 
     return dependencies
