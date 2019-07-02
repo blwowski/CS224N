@@ -38,14 +38,12 @@ def train(parser, train_data, dev_data, output_path, batch_size=1024, n_epochs=1
     ### YOUR CODE HERE (~2-7 lines)
     ### TODO:
     ###      1) Construct Adam Optimizer in variable `optimizer`
-    ###      2) Construct the Cross Entropy Loss Function in variable `loss_func`
-    ###
-    ### Hint: Use `parser.model.parameters()` to pass optimizer
-    ###       necessary parameters to tune.
-    ### Please see the following docs for support:
-    ###     Adam Optimizer: https://pytorch.org/docs/stable/optim.html
-    ###     Cross Entropy Loss: https://pytorch.org/docs/stable/nn.html#crossentropyloss
 
+    optimizer = optim.Adam(parser.model.parameters())
+
+    ###      2) Construct the Cross Entropy Loss Function in variable `loss_func`
+
+    loss_func = torch.nn.CrossEntropyLoss()
 
     ### END YOUR CODE
 
@@ -90,15 +88,23 @@ def train_for_epoch(parser, train_data, dev_data, optimizer, loss_func, batch_si
             ### YOUR CODE HERE (~5-10 lines)
             ### TODO:
             ###      1) Run train_x forward through model to produce `logits`
+
+            logits = parser.model(train_x)
+
             ###      2) Use the `loss_func` parameter to apply the PyTorch CrossEntropyLoss function.
             ###         This will take `logits` and `train_y` as inputs. It will output the CrossEntropyLoss
             ###         between softmax(`logits`) and `train_y`. Remember that softmax(`logits`)
             ###         are the predictions (y^ from the PDF).
-            ###      3) Backprop losses
-            ###      4) Take step with the optimizer
-            ### Please see the following docs for support:
-            ###     Optimizer Step: https://pytorch.org/docs/stable/optim.html#optimizer-step
 
+            loss = loss_func(logits, train_y)
+
+            ###      3) Backprop losses
+
+            loss.backward()
+
+            ###      4) Take step with the optimizer
+
+            optimizer.step()
 
             ### END YOUR CODE
             prog.update(1)
@@ -115,10 +121,10 @@ def train_for_epoch(parser, train_data, dev_data, optimizer, loss_func, batch_si
 
 if __name__ == "__main__":
     # Note: Set debug to False, when training on entire corpus
-    debug = True
-    # debug = False
+    #debug = True
+    debug = False
 
-    assert(torch.__version__ == "1.0.0"),  "Please install torch version 1.0.0"
+    #assert(torch.__version__ == "1.0.0"),  "Please install torch version 1.0.0"
 
     print(80 * "=")
     print("INITIALIZING")

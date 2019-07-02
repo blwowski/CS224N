@@ -94,10 +94,10 @@ class ParserModel(nn.Module):
         ###     2) After you apply the embedding lookup, you will have a tensor shape (batch_size, n_features, embedding_size).
         ###         Use the tensor `view` method to reshape the embeddings tensor to (batch_size, n_features * embedding_size)
 
-         ### x.size()[0] == batch_size
-         ### -1 == tells views to compute the appropriate number of rows that is necessary
-         ### OPTIONAL:  x = x.view(x.size()[0], self.n_features * self.embed_size)
-         x = x.view(x.size()[0], -1)
+        ### x.size()[0] == batch_size
+        ### -1 == tells views to compute the appropriate number of rows that is necessary
+        ### OPTIONAL:  x = x.view(x.size()[0], self.n_features * self.embed_size)
+        x = x.view(x.size()[0], -1)
 
         ### END YOUR CODE
         return x
